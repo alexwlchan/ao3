@@ -161,10 +161,34 @@ History enabled, you can get a list of work IDs from that history, like so:
 
 You can enable Viewing History in the settings pane.
 
-Current state
-*************
+One interesting side effect of this is that you can use it to get a list
+of works where you've left kudos:
 
-This is still pretty rough around the edges.
+.. code-block:: python
+
+   from ao3 import AO3
+   from ao3.works import RestrictedWork
+
+   api = AO3()
+   api.login('username', 'password')
+
+   for work_id in api.user.reading_history():
+       try:
+           work = api.work(id=work_id)
+       except RestrictedWork:
+           continue
+       print(work.url + '... ', end='')
+       if api.user.username in work.kudos_left_by:
+           print('yes')
+       else:
+           print('no')
+
+Warning: this is `very` slow.  It has to go back and load a page for everything
+you've ever read.  Don't use this if you're on a connection with limited
+bandwidth.
+
+This doesn't include "restricted" works -- works that require you to be a
+logged-in user to see them.
 
 License
 *******
