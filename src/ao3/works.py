@@ -11,6 +11,10 @@ class WorkNotFound(Exception):
     pass
 
 
+class RestrictedWork(Exception):
+    pass
+
+
 class Work(object):
 
     def __init__(self, id):
@@ -32,6 +36,15 @@ class Work(object):
             req = sess.get(
                 'https://archiveofourown.org/works/%s?view_adult=true' %
                 self.id)
+
+        # Check for restricted works, which require you to be logged in
+        # first.  See https://archiveofourown.org/admin_posts/138
+        # To make this work, we'd need to have a common Session object
+        # across all the API classes.  Not impossible, but fiddlier than I
+        # care to implement right now.
+        # TODO: Fix this.
+        if 'This work is only available to registered users' in req.text:
+            raise RestrictedWork('Looking at work ID %s requires login')
 
         self._html = req.text
         self._soup = BeautifulSoup(self._html, 'html.parser')
