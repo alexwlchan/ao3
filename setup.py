@@ -41,5 +41,8 @@ setup(
     ],
     packages=find_packages(SOURCE),
     package_dir={'': SOURCE},
-    install_requires=[],
+    install_requires=[
+        'beautifulsoup4>=4.5.3, <5',
+        'requests>=2.12.4, <3',
+    ],
 )

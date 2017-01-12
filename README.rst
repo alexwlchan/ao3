@@ -32,7 +32,7 @@ Getting a work:
 
 .. code-block:: pycon
 
-   >>> work = api.works(id='258626')
+   >>> work = api.work(id='258626')
 
 Looking up metadata on that work:
 
