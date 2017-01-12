@@ -1,5 +1,7 @@
 # -*- encoding: utf-8
 
+import itertools
+
 from bs4 import BeautifulSoup, Tag
 import requests
 
