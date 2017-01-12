@@ -136,6 +136,36 @@ for easy export/passing into other places:
    >>> work.json()
    '{"rating": ["Teen And Up Audiences"], "fandoms": ["Anthropomorfic - Fandom"], "characters": ["Pinboard", "Delicious - Character", "Diigo - Character"], "language": "English", "additional_tags": ["crackfic", "Meta", "so very not my usual thing"], "warnings": [], "id": "258626", "stats": {"hits": 43037, "words": 605, "bookmarks": 99, "comments": 122, "published": "2011-09-29", "kudos": 1238}, "author": "ambyr", "category": ["F/M"], "title": "The Morning After", "relationship": ["Pinboard/Fandom"], "summary": "<p>Delicious just can\'t understand why it\'s the shy, quiet ones who get all the girls.</p>"}'
 
+Looking up your account
+-----------------------
+
+If you have an account on AO3, you can log in to access pages that aren't
+available to the public:
+
+.. code-block:: pycon
+
+   >>> api.login('username', 'password')
+
+Currently there's only one thing you can do with this: if you have Viewing
+History enabled, you can get a list of work IDs from that history, like so:
+
+.. code-block:: pycon
+
+   >>> for work_id in api.user.reading_history():
+   ...     print(work_id)
+   ...
+   '123'
+   '456'
+   '789'
+   # and so on
+
+You can enable Viewing History in the settings pane.
+
+Current state
+*************
+
+This is still pretty rough around the edges.
+
 License
 *******
 
