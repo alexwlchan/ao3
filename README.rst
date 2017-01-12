@@ -190,6 +190,10 @@ bandwidth.
 This doesn't include "restricted" works -- works that require you to be a
 logged-in user to see them.
 
+(The reading page tells you when you last read something.  If you cached the
+results, and then subsequent runs only rechecked fics you'd read since the
+last run, you could make this quite efficient.  Exercise for the reader.)
+
 License
 *******
 
