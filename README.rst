@@ -4,22 +4,34 @@ ao3.py
 This Python package provides a scripted interface to some of the data on
 `AO3 <https://archiveofourown.org/>`_ (the Archive of Our Own).
 
-Because AO3 doesn't have an official API (although `it's on the roadmap
-<http://archiveofourown.org/admin_posts/295>`_), this module does some HTML
-scraping to retrieve metadata.  I wrote this for some personal scripts as
-a stopgap until we get a proper API.
+It is **not** an official API.
+
+Motivation
+**********
+
+I want to be able to write Python scripts that use data from AO3.
+
+An official API for AO3 data has been `on the roadmap <http://archiveofourown.org/admin_posts/295>`_
+for a couple of years.  Until that appears, I've cobbled together my own
+page-scraping code that does the job.  It's a bit messy and fragile, but it
+seems to work most of the time.
+
+If/when we get the proper API, I'd drop this in a heartbeat and do it
+properly.
 
 Installation
-------------
+************
 
 Install using pip:
 
 .. code-block:: console
 
-  $ pip install ao3
+   $ pip install git+git://github.com/alexwlchan/ao3.git
 
-Basic usage
------------
+I'm trying to support Python 2.7, Python 3.3+ and PyPy.
+
+Usage
+*****
 
 Create an API instance:
 
@@ -28,34 +40,103 @@ Create an API instance:
    >>> from ao3 import AO3
    >>> api = AO3()
 
+Looking up information about a work
+-----------------------------------
+
 Getting a work:
 
 .. code-block:: pycon
 
    >>> work = api.work(id='258626')
 
-Looking up metadata on that work:
+The ``id`` is the numeric portion of the URL.  For example, the work ID of
+``https://archiveofourown.org/works/258626`` is ``258626``.
+
+Get a URL:
+
+.. code-block:: pycon
+
+   >>> work.url
+   'https://archiveofourown.org/works/258626'
+
+You can then look up a number of attributes, similar to the Stats panel at the
+top of a page.  Here's the full set you can look up:
 
 .. code-block:: pycon
 
    >>> work.title
    'The Morning After'
+
    >>> work.author
    'ambyr'
 
-You can see the other attributes using ``dir(work)`` or ``help(work)``.
+   >>> work.summary
+   "<p>Delicious just can't understand why it's the shy, quiet ones who get all the girls.</p>"
 
-Feedback/suggestions
---------------------
+   >>> work.rating
+   ['Teen And Up Audiences']
 
-I'm not putting a lot of time into this, but I have a few ideas (see
-`Experiments with AO3 and Python
-<https://alexwlchan.net/2017/01/experiments-with-ao3-and-python/>`_).
-If there's some part of AO3 you'd really like a scripted interface to,
-let me know (`contact details <https://alexwlchan.net/about/>`_) and I'll
-give it some thought.
+   >>> work.warnings
+   []
+
+(An empty list is synonymous with "No Archive Warnings", so that it's a falsey
+value.)
+
+.. code-block:: pycon
+
+   >>> work.category
+   ['F/M']
+
+   >>> work.fandoms
+   ['Anthropomorfic - Fandom']
+
+   >>> work.relationship
+   ['Pinboard/Fandom']
+
+   >>> work.characters
+   ['Pinboard', 'Delicious - Character', 'Diigo - Character']
+
+   >>> work.additional_tags
+   ['crackfic', 'Meta', 'so very not my usual thing']
+
+   >>> work.language
+   'English'
+
+   >>> work.published
+   datetime.date(2011, 9, 29)
+
+   >>> work.words
+   605
+
+   >>> work.comments
+   122
+
+   >>> work.kudos
+   1238
+
+   >>> for name in work.kudos_left_by:
+   ...     print(name)
+   ...
+   winterbelles
+   AnonEhouse
+   SailAweigh
+   # and so on
+
+   >>> work.bookmarks
+   99
+
+   >>> work.hits
+   43037
+
+There's also a method for dumping all the information about a work into JSON,
+for easy export/passing into other places:
+
+.. code-block:: pycon
+
+   >>> work.json()
+   '{"rating": ["Teen And Up Audiences"], "fandoms": ["Anthropomorfic - Fandom"], "characters": ["Pinboard", "Delicious - Character", "Diigo - Character"], "language": "English", "additional_tags": ["crackfic", "Meta", "so very not my usual thing"], "warnings": [], "id": "258626", "stats": {"hits": 43037, "words": 605, "bookmarks": 99, "comments": 122, "published": "2011-09-29", "kudos": 1238}, "author": "ambyr", "category": ["F/M"], "title": "The Morning After", "relationship": ["Pinboard/Fandom"], "summary": "<p>Delicious just can\'t understand why it\'s the shy, quiet ones who get all the girls.</p>"}'
 
 License
--------
+*******
 
 The project is licensed under the MIT license.
