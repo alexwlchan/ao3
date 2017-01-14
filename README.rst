@@ -26,7 +26,7 @@ Install using pip:
 
 .. code-block:: console
 
-   $ pip install git+git://github.com/alexwlchan/ao3.git
+   $ pip install ao3
 
 I'm trying to support Python 2.7, Python 3.3+ and PyPy.
 
