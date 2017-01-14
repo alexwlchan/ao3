@@ -1,0 +1,7 @@
+[run]
+branch = True
+include =
+    **/.tox/*/lib/*/site-packages/ao3/*.py
+
+[report]
+show_missing = True

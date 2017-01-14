@@ -1,2 +1,7 @@
 # Python detritus
 *.egg-info
+
+# Test files
+.cache
+.coverage
+.tox
