@@ -1,5 +1,6 @@
 # -*- encoding: utf-8
 
+from . import utils
 from .users import User
 from .works import Work
 

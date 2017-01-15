@@ -18,7 +18,7 @@ long_description = codecs.open(README, encoding='utf-8').read()
 
 setup(
     name='ao3',
-    version='0.1.0',
+    version='0.1.2',
     description='A Python API for scraping AO3 (the Archive of Our Own)',
     long_description=long_description,
     url='https://github.com/alexwlchan/ao3',
