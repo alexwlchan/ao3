@@ -1,6 +1,13 @@
 Release History
 ===============
 
+0.2.0 (15 January 2017)
+***********************
+
+- This changes the ``reading_history()`` method to include the date when a
+  user last read the item.  This opens the door to caching the reading history,
+  not fetching the whole thing on every run.
+
 0.1.2 (14 January 2017)
 ***********************
 

@@ -151,8 +151,8 @@ History enabled, you can get a list of work IDs from that history, like so:
 
 .. code-block:: pycon
 
-   >>> for work_id in api.user.reading_history():
-   ...     print(work_id)
+   >>> for entry in api.user.reading_history():
+   ...     print(entry.work_id)
    ...
    '123'
    '456'
@@ -172,9 +172,9 @@ of works where you've left kudos:
    api = AO3()
    api.login('username', 'password')
 
-   for work_id in api.user.reading_history():
+   for entry in api.user.reading_history():
        try:
-           work = api.work(id=work_id)
+           work = api.work(id=entry.work_id)
        except RestrictedWork:
            continue
        print(work.url + '... ', end='')
