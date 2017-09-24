@@ -18,7 +18,14 @@ class User(object):
     def __init__(self, username, password):
         self.username = username
         sess = requests.Session()
+
+        req = sess.get('https://archiveofourown.org')
+        soup = BeautifulSoup(req.text, features='html.parser')
+
+        authenticity_token = soup.find('input', {'name': 'authenticity_token'})['value']
+
         req = sess.post('https://archiveofourown.org/user_sessions', params={
+            'authenticity_token': authenticity_token,
             'user_session[login]': username,
             'user_session[password]': password,
         })
