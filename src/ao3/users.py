@@ -17,9 +17,11 @@ ReadingHistoryItem = collections.namedtuple(
 
 class User(object):
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, sess=None):
         self.username = username
-        sess = requests.Session()
+
+        if sess == None:
+            sess = requests.Session()
 
         req = sess.get('https://archiveofourown.org')
         soup = BeautifulSoup(req.text, features='html.parser')
@@ -122,7 +124,7 @@ class User(object):
 
     def bookmarks(self):
         """
-        Returns a list of the user's bookmarks as Work() objects.
+        Returns a list of the user's bookmarks as Work objects.
 
         Takes forever.
 
@@ -134,7 +136,7 @@ class User(object):
         bookmarks = []
 
         for bookmark_id in bookmark_ids:
-            work = Work(bookmark_id)
+            work = Work(bookmark_id, self.sess)
             bookmarks.append(work)
 
             bookmark_total = bookmark_total + 1

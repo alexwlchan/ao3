@@ -17,11 +17,13 @@ class RestrictedWork(Exception):
 
 class Work(object):
 
-    def __init__(self, id):
+    def __init__(self, id, sess=None):
         self.id = id
 
         # Fetch the HTML for this work
-        sess = requests.Session()
+        if sess == None:
+            sess = requests.Session()
+            
         req = sess.get('https://archiveofourown.org/works/%s' % self.id)
 
         if req.status_code == 404:
