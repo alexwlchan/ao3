@@ -75,6 +75,7 @@ class Work(object):
         #
         #     <h2 class="title heading">[title]</h2>
         #
+        # TODO: Retrieve title from restricted work
         title_tag = self._soup.find('h2', attrs={'class': 'title'})
         return title_tag.contents[0].strip()
 
