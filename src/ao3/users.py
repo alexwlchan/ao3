@@ -8,6 +8,8 @@ import re
 from bs4 import BeautifulSoup, Tag
 import requests
 
+from .works import Work
+
 
 ReadingHistoryItem = collections.namedtuple(
     'ReadingHistoryItem', ['work_id', 'last_read'])
@@ -15,9 +17,11 @@ ReadingHistoryItem = collections.namedtuple(
 
 class User(object):
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, sess=None):
         self.username = username
-        sess = requests.Session()
+
+        if sess == None:
+            sess = requests.Session()
 
         req = sess.get('https://archiveofourown.org')
         soup = BeautifulSoup(req.text, features='html.parser')
@@ -37,9 +41,108 @@ class User(object):
                 'Error logging in to AO3; is your password correct?')
 
         self.sess = sess
-
     def __repr__(self):
         return '%s(username=%r)' % (type(self).__name__, self.username)
+
+    def bookmarks_ids(self):
+        """
+        Returns a list of the user's bookmarks' ids. Ignores external work bookmarks.
+
+        User must be logged in to see private bookmarks.
+        """
+
+        api_url = (
+            'https://archiveofourown.org/users/%s/bookmarks?page=%%d'
+            % self.username)
+
+        bookmarks = []
+
+        num_works = 0
+        for page_no in itertools.count(start=1):
+            # print("Finding page: \t" + str(page_no) + " of bookmarks. \t" + str(num_works) + " bookmarks ids found.")
+
+            req = self.sess.get(api_url % page_no)
+            soup = BeautifulSoup(req.text, features='html.parser')
+
+            # The entries are stored in a list of the form:
+            #
+            #     <ol class="bookmark index group">
+            #       <li id="bookmark_12345" class="bookmark blurb group" role="article">
+            #         ...
+            #       </li>
+            #       <li id="bookmark_67890" class="bookmark blurb group" role="article">
+            #         ...
+            #       </li>
+            #       ...
+            #     </o
+
+            ol_tag = soup.find('ol', attrs={'class': 'bookmark'})
+            
+
+            for li_tag in ol_tag.findAll('li', attrs={'class': 'blurb'}):
+                num_works = num_works + 1
+                try:
+                    # <h4 class="heading">
+                    #     <a href="/works/12345678">Work Title</a>
+                    #     <a href="/users/authorname/pseuds/authorpseud" rel="author">Author Name</a>
+                    # </h4>
+
+                    for h4_tag in li_tag.findAll('h4', attrs={'class': 'heading'}):
+                        for link in h4_tag.findAll('a'):
+                            if ('works' in link.get('href')) and not ('external_works' in link.get('href')):
+                                work_id = link.get('href').replace('/works/', '')
+                                bookmarks.append(work_id)
+                except KeyError:
+                    # A deleted work shows up as
+                    #
+                    #      <li class="deleted reading work blurb group">
+                    #
+                    # There's nothing that we can do about that, so just skip
+                    # over it.
+                    if 'deleted' in li_tag.attrs['class']:
+                        pass
+                    else:
+                        raise
+
+
+            # The pagination button at the end of the page is of the form
+            #
+            #     <li class="next" title="next"> ... </li>
+            #
+            # If there's another page of results, this contains an <a> tag
+            # pointing to the next page.  Otherwise, it contains a <span>
+            # tag with the 'disabled' class.
+            try:
+                next_button = soup.find('li', attrs={'class': 'next'})
+                if next_button.find('span', attrs={'class': 'disabled'}):
+                    break
+            except:
+                # In case of absence of "next"
+                break
+
+        return bookmarks
+
+    def bookmarks(self):
+        """
+        Returns a list of the user's bookmarks as Work objects.
+
+        Takes forever.
+
+        User must be logged in to see private bookmarks.
+        """
+
+        bookmark_total = 0
+        bookmark_ids = self.bookmarks_ids()
+        bookmarks = []
+
+        for bookmark_id in bookmark_ids:
+            work = Work(bookmark_id, self.sess)
+            bookmarks.append(work)
+
+            bookmark_total = bookmark_total + 1
+            # print (str(bookmark_total) + "\t bookmarks found.")
+
+        return bookmarks
 
     def reading_history(self):
         """Returns a list of articles in the user's reading history.
@@ -113,6 +216,10 @@ class User(object):
             # If there's another page of results, this contains an <a> tag
             # pointing to the next page.  Otherwise, it contains a <span>
             # tag with the 'disabled' class.
-            next_button = soup.find('li', attrs={'class': 'next'})
-            if next_button.find('span', attrs={'class': 'disabled'}):
+            try:
+                next_button = soup.find('li', attrs={'class': 'next'})
+                if next_button.find('span', attrs={'class': 'disabled'}):
+                    break
+            except:
+                # In case of absence of "next"
                 break

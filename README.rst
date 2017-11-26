@@ -146,8 +146,8 @@ available to the public:
 
    >>> api.login('username', 'password')
 
-Currently there's only one thing you can do with this: if you have Viewing
-History enabled, you can get a list of work IDs from that history, like so:
+If you have Viewing History enabled, you can get a list of work IDs from 
+that history, like so:
 
 .. code-block:: pycon
 
@@ -193,6 +193,41 @@ logged-in user to see them.
 (The reading page tells you when you last read something.  If you cached the
 results, and then subsequent runs only rechecked fics you'd read since the
 last run, you could make this quite efficient.  Exercise for the reader.)
+
+Looking up your bookmarks
+-------------------------
+
+If you login as a user you can look up the bookmarks for that user. You can 
+get the bookmarks as a list of AO3 id numbers or as a list of work objects.
+
+Warning: This is very slow as as the api has to go back and retrieve every 
+page.
+
+Get the bookmarks as works:
+
+.. code-block:: pycon
+
+   >>> for bookmark in api.user.bookmarks():
+   ...     print(bookmark.title)
+   ...
+   'Story Name'
+   'Fanfiction Title'
+   'Read This Fic'
+   # and so on
+
+Get the bookmarks as a list of id numbers:
+
+.. code-block:: pycon
+
+   >>> for bookmark_id in api.user.bookmarks_ids():
+   ...     print(bookmark_id)
+   ...
+   '123'
+   '456'
+   '789'
+   # and so on
+
+
 
 License
 *******
