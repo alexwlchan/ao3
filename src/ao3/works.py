@@ -343,7 +343,7 @@ class Work(object):
         *args and **kwargs are passed directly to `json.dumps()` from the
         standard library.
 
-        bookmark_ids is not provided 
+        bookmark_users is not provided 
         due to time it takes to go through all the bookmarks
 
         """
