@@ -125,6 +125,9 @@ value.)
    >>> work.bookmarks
    99
 
+   >>> work.bookmark_users
+   [['user1', 'user2'], ['pseuds1', 'pseuds2']]
+   
    >>> work.hits
    43037
 
