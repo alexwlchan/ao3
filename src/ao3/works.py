@@ -266,6 +266,7 @@ class Work(object):
         # bookmarked this, but for now just return the number.
         return int(self._lookup_stat('bookmarks').contents[0])
 
+    @property
     def bookmark_users(self):
         api_url = ('https://archiveofourown.org/works/%s/bookmarks?page=%%d'
         % self.id)
