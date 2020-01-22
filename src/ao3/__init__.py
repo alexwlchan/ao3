@@ -23,7 +23,7 @@ class AO3(object):
         """
         return Work(id=id, sess=self.session)
 
-    def login(self, username, password):
+    def login(self, username, password=None):
         """Log in to the archive.
 
         This allows you to access pages that are only available while
