@@ -24,9 +24,9 @@ class Work(object):
         # Fetch the HTML for this work
         if sess == None:
             sess = requests.Session()
-        
+
         self.sess = sess
-            
+
         req = sess.get('https://archiveofourown.org/works/%s' % self.id)
 
         if req.status_code == 404:
@@ -266,19 +266,17 @@ class Work(object):
         # bookmarked this, but for now just return the number.
         return int(self._lookup_stat('bookmarks').contents[0])
 
-    @property
     def bookmark_users(self):
-        api_url = ('https://archiveofourown.org/works/%s/bookmarks?page=%%d'
-        % self.id)
+        api_url = ('https://archiveofourown.org/works/%s/bookmarks' % self.id)
 
         usernames = []
         pseuds = []
 
         num_users = 0
         for page_no in itertools.count(start=1):
-            print("Finding page: \t" + str(page_no) + " of bookmarks. \t" + str(num_users) + " usernames found.")
+            #print("Finding page: \t" + str(page_no) + " of bookmarks. \t" + str(num_users) + " usernames found.")
 
-            req = self.sess.get(api_url % page_no)
+            req = self.sess.get(api_url, params={"page": page_no})
             soup = BeautifulSoup(req.text, features='html.parser')
 
             # The entries are stored in a list of the form:
@@ -292,8 +290,6 @@ class Work(object):
             #           </li>
             #           ...
             #
-            # name is 'username' if on default pseudonym, else 'username (pseudonym)'
-            #
 
             ol_tag = soup.find('ol', attrs={'class': 'bookmark'})
 
@@ -303,16 +299,18 @@ class Work(object):
                 #               <div class="header module">
                 #                   <h5 class="byline heading">
                 #                       Bookmared by
-                #                       <a href=/users/[username]/pseuds/[pseudsname]>[name]</a>
+                #                       <a href=/users/[username]/pseuds/[pseudonym]>[name]</a>
                 #                   </h5>
                 #                   ...
                 #               </div>
+                #
+                # name is 'username' if on default pseudonym, else 'username (pseudonym)'
 
                 h5_tag = li_tag.find('h5', attrs={'class': 'heading'})
                 link = h5_tag.find('a')
                 href = link.get('href')
-                
-                username = href[len('/users/') : href.find('/pseuds/')]
+
+                username = href[len('/users/'): href.find('/pseuds/')]
                 usernames.append(username)
                 pseud = href[href.find('/pseuds/') + len('/pseuds/'):]
                 pseuds.append(pseud)
