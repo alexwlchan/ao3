@@ -1,3 +1,12 @@
+**Maintenance note, 19 July 2020:** This isn't actively maintained, and it hasn't been for a long time.
+I created this library/repo to accompany a `blog post I wrote in 2018 <https://alexwlchan.net/2017/01/scrape-logged-in-ao3/>`_, but I haven't looked at it much since then and I don't have much time for open source these days.
+
+FWIW, if I were to work on this again, I'd start by decoupling the HTML parsing and the I/O logic (see my PyCon UK talk about `sans I/O programming <https://alexwlchan.net/2019/10/sans-io-programming/>`_).
+
+I hope this repo serves as a useful pointer, but don't expect updates any time soon.
+
+----
+
 ao3.py
 ======
 
@@ -37,7 +46,7 @@ Create an API instance:
 
 .. code-block:: pycon
 
-   >>> from ao3 import AO3
+   >>> from ao3 import AO3, 
    >>> api = AO3()
 
 Looking up information about a work
