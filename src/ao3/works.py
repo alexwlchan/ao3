@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import json
+import itertools
 
 from bs4 import BeautifulSoup, Tag
 import requests
@@ -23,7 +24,9 @@ class Work(object):
         # Fetch the HTML for this work
         if sess == None:
             sess = requests.Session()
-            
+
+        self.sess = sess
+
         req = sess.get('https://archiveofourown.org/works/%s' % self.id)
 
         if req.status_code == 404:
@@ -263,6 +266,71 @@ class Work(object):
         # bookmarked this, but for now just return the number.
         return int(self._lookup_stat('bookmarks').contents[0])
 
+    def bookmark_users(self):
+        api_url = ('https://archiveofourown.org/works/%s/bookmarks' % self.id)
+
+        usernames = []
+        pseuds = []
+
+        num_users = 0
+        for page_no in itertools.count(start=1):
+            #print("Finding page: \t" + str(page_no) + " of bookmarks. \t" + str(num_users) + " usernames found.")
+
+            req = self.sess.get(api_url, params={"page": page_no})
+            soup = BeautifulSoup(req.text, features='html.parser')
+
+            # The entries are stored in a list of the form:
+            #
+            #       <ol class="bookmark index group">
+            #           <li id="work_[workid]" class="work blurb group" role="article">
+            #               ...
+            #           </li>
+            #           <li class="user short blurb group" role="article">
+            #               ...
+            #           </li>
+            #           ...
+            #
+
+            ol_tag = soup.find('ol', attrs={'class': 'bookmark'})
+
+            for li_tag in ol_tag.findAll('li', attrs={'class': 'user'}):
+                num_users = num_users + 1
+
+                #               <div class="header module">
+                #                   <h5 class="byline heading">
+                #                       Bookmared by
+                #                       <a href=/users/[username]/pseuds/[pseudonym]>[name]</a>
+                #                   </h5>
+                #                   ...
+                #               </div>
+                #
+                # name is 'username' if on default pseudonym, else 'username (pseudonym)'
+
+                h5_tag = li_tag.find('h5', attrs={'class': 'heading'})
+                link = h5_tag.find('a')
+                href = link.get('href')
+
+                username = href[len('/users/'): href.find('/pseuds/')]
+                usernames.append(username)
+                pseud = href[href.find('/pseuds/') + len('/pseuds/'):]
+                pseuds.append(pseud)
+
+            # The pagination button at the end of the page is of the form
+            #
+            #     <li class="next" title="next"> ... </li>
+            #
+            # If there's another page of results, this contains an <a> tag
+            # pointing to the next page.  Otherwise, it contains a <span>
+            # tag with the 'disabled' class.
+            try:
+                next_button = soup.find('li', attrs={'class': 'next'})
+                if next_button.find('span', attrs={'class': 'disabled'}):
+                    break
+            except:
+                # In case of absence of "next"
+                break
+        return (usernames, pseuds)
+
     @property
     def hits(self):
         """The number of hits this work has received."""
@@ -273,6 +341,9 @@ class Work(object):
 
         *args and **kwargs are passed directly to `json.dumps()` from the
         standard library.
+
+        bookmark_users is not provided 
+        due to time it takes to go through all the bookmarks
 
         """
         data = {
