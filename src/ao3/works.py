@@ -15,6 +15,10 @@ class RestrictedWork(Exception):
     pass
 
 
+class TooManyRequests(Exception):
+    pass
+
+
 class Work(object):
 
     def __init__(self, id, sess=None):
@@ -25,12 +29,15 @@ class Work(object):
             sess = requests.Session()
             
         req = sess.get('https://archiveofourown.org/works/%s' % self.id)
-
         if req.status_code == 404:
             raise WorkNotFound('Unable to find a work with id %r' % self.id)
+        elif req.status_code == 429:
+            # Server returned 429 "Too Many Requests" error. Get the Retry-After header
+            # and indicate how long to wait.
+            raise TooManyRequests('Too Many Requests: Try again after '+str(req.headers.get('Retry-After'))+' seconds')
         elif req.status_code != 200:
             raise RuntimeError('Unexpected error from AO3 API: %r (%r)' % (
-                req.text, req.statuscode))
+                req.text, req.status_code))
 
         # For some works, AO3 throws up an interstitial page asking you to
         # confirm that you really want to see the adult works.  Yes, we do.
@@ -45,9 +52,8 @@ class Work(object):
         # across all the API classes.  Not impossible, but fiddlier than I
         # care to implement right now.
         # TODO: Fix this.
-        if 'This work is only available to registered users' in req.text:
+        if 'This work is only available to registered users' in req.text or 'Forgot your password or user name?' in req.text:
             raise RestrictedWork('Looking at work ID %s requires login')
-
         self._html = req.text
         self._soup = BeautifulSoup(self._html, 'html.parser')
 
@@ -92,24 +98,33 @@ class Work(object):
         a_tag = [t
                  for t in byline_tag.contents
                  if isinstance(t, Tag)]
-        assert len(a_tag) == 1
-        return a_tag[0].contents[0].strip()
+        # Create a list of authors, as some works are collaborations.
+        authors = []
+        for auth in a_tag:
+            authors.append(auth.contents[0].strip())
+        return authors
+
 
     @property
     def summary(self):
-        """The author summary of the work."""
-        # The author summary is kept in the following format:
-        #
-        #     <div class="summary module" role="complementary">
-        #       <h3 class="heading">Summary:</h3>
-        #       <blockquote class="userstuff">
-        #         [author_summary_html]
-        #       </blockquote>
-        #     </div>
-        #
-        summary_div = self._soup.find('div', attrs={'class': 'summary'})
-        blockquote = summary_div.find('blockquote')
-        return blockquote.renderContents().decode('utf8').strip()
+        try:
+            """The author summary of the work."""
+            # The author summary is kept in the following format:
+            #
+            #     <div class="summary module" role="complementary">
+            #       <h3 class="heading">Summary:</h3>
+            #       <blockquote class="userstuff">
+            #         [author_summary_html]
+            #       </blockquote>
+            #     </div>
+            #
+            summary_div = self._soup.find('div', attrs={'class': 'summary'})
+            blockquote = summary_div.find('blockquote')
+            return blockquote.renderContents().decode('utf8').strip()
+        except AttributeError:
+            # If the work has no summary, Python throws an AttributeError. Catch and
+            # return an empty string instead.
+            return ''
 
     def _lookup_stat(self, class_name, default=None):
         """Returns the value of a stat."""
@@ -255,18 +270,26 @@ class Work(object):
     @property
     def bookmarks(self):
         """The number of times this work has been bookmarked."""
-        # This returns a link of the form
-        #
-        #     <a href="/works/9079264/bookmarks">102</a>
-        #
-        # It might be nice to follow that page and get a list of who has
-        # bookmarked this, but for now just return the number.
-        return int(self._lookup_stat('bookmarks').contents[0])
+        try:
+            # This returns a link of the form
+            #
+            #     <a href="/works/9079264/bookmarks">102</a>
+            #
+            # It might be nice to follow that page and get a list of who has
+            # bookmarked this, but for now just return the number.
+            return int(self._lookup_stat('bookmarks').contents[0])
+        except AttributeError:
+            # Work has likely not been bookmarked, or bookmarks have been turned off(?)
+            return 0
 
     @property
     def hits(self):
         """The number of hits this work has received."""
-        return int(self._lookup_stat('hits', 0))
+        # Use the same try-catch as bookmarks. Likely unnecessary, but a precaution
+        try:
+            return int(self._lookup_stat('hits', 0))
+        except AttributeError:
+            return 0
 
     def json(self, *args, **kwargs):
         """Provide a complete representation of the work in JSON.
