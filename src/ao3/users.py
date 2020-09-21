@@ -28,10 +28,10 @@ class User(object):
 
         authenticity_token = soup.find('input', {'name': 'authenticity_token'})['value']
 
-        req = sess.post('https://archiveofourown.org/user_sessions', params={
+        req = sess.post('https://archiveofourown.org/users/login', params={
             'authenticity_token': authenticity_token,
-            'user_session[login]': username,
-            'user_session[password]': password,
+            'user[login]': username,
+            'user[password]': password,
         })
 
         # Unfortunately AO3 doesn't use HTTP status codes to communicate
@@ -77,9 +77,9 @@ class User(object):
             #     </o
 
             ol_tag = soup.find('ol', attrs={'class': 'bookmark'})
-            
 
-            for li_tag in ol_tag.findAll('li', attrs={'class': 'blurb'}):
+
+            for li_tag in ol_tag.find_all('li', attrs={'class': 'blurb'}):
                 num_works = num_works + 1
                 try:
                     # <h4 class="heading">
@@ -87,8 +87,8 @@ class User(object):
                     #     <a href="/users/authorname/pseuds/authorpseud" rel="author">Author Name</a>
                     # </h4>
 
-                    for h4_tag in li_tag.findAll('h4', attrs={'class': 'heading'}):
-                        for link in h4_tag.findAll('a'):
+                    for h4_tag in li_tag.find_all('h4', attrs={'class': 'heading'}):
+                        for link in h4_tag.find_all('a'):
                             if ('works' in link.get('href')) and not ('external_works' in link.get('href')):
                                 work_id = link.get('href').replace('/works/', '')
                                 bookmarks.append(work_id)
@@ -176,7 +176,7 @@ class User(object):
             #     </ol>
             #
             ol_tag = soup.find('ol', attrs={'class': 'reading'})
-            for li_tag in ol_tag.findAll('li', attrs={'class': 'blurb'}):
+            for li_tag in ol_tag.find_all('li', attrs={'class': 'blurb'}):
                 try:
                     work_id = li_tag.attrs['id'].replace('work_', '')
 
@@ -196,7 +196,7 @@ class User(object):
                         h4_tag.contents[2]).group(0)
                     date = datetime.strptime(date_str, '%d %b %Y').date()
 
-                    yield work_id, date
+                    yield ReadingHistoryItem(work_id, date)
                 except KeyError:
                     # A deleted work shows up as
                     #
