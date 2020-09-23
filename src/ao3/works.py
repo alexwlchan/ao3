@@ -268,6 +268,20 @@ class Work(object):
         """The number of hits this work has received."""
         return int(self._lookup_stat('hits', 0))
 
+    @property
+    def published_chapters(self):
+        """The number of currently published chapters of this work."""
+        return int(self._lookup_stat('chapters', '0/?').split('/')[0])
+
+    @property
+    def total_chapters(self):
+        """The total chapters in this work. None, if there is no defined end."""
+        tot = self._lookup_stat('chapters', '0/?').split('/')[1]
+        if tot == '?':
+            return None
+        else:
+            return int(tot)
+
     def json(self, *args, **kwargs):
         """Provide a complete representation of the work in JSON.
 
