@@ -175,7 +175,10 @@ class Work(object):
     @property
     def relationship(self):
         """The relationships in this work."""
-        return self._lookup_stat('relationship', [])
+        try:
+            return self._lookup_stat('relationship', [])
+        except AttributeError:
+            return ''
 
     @property
     def characters(self):
